@@ -1,43 +1,52 @@
 import "./App.css";
 import React, { useState, useEffect } from 'react'
-
- import Header from "./components/Header";
-import StackShelves from "./components/StackShelves";
-import Search from "./components/Search";
+import Home from "./pages/Home";
+import PageNotFound from "./pages/PageNotFound"; 
+import Search from "./pages/Search";
 import * as BooksAPI from './BooksAPI'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
 
 function App() {
   const [books, setBooks] = useState([])
  //user can change book shef ////////////////////////////////
-  const ChangeBookShelf = (bookInput, whereToInput) => {
+  const ChangeBookShelf = async (selectedBook, moveTo) => {
+    await BooksAPI.update(selectedBook, moveTo);
     const updatedBooks = books.map(book => {
-      if (book.id === bookInput.id) {
-        book.shelf = whereToInput;
+      if (book.id === selectedBook.id) {
+        book.shelf = moveTo;
       }
       return book;
     })
     setBooks(updatedBooks);
-    BooksAPI.update(bookInput, whereToInput);
+  
   }
-///////////////////////////////
+//////////////////////////////
+ 
 // show all books on the shelf
-  useEffect(() => {BooksAPI.getAll()
-    .then(data => 
-      {
-        console.log(data)
-        setBooks(data)
-       }
-    );
+  useEffect(() => {
+    
+    const showBooks = async () => {
+      const res = await BooksAPI.getAll();
+      setBooks(res);
+    }
+    showBooks();
 }, [])
 ////////////////////////////////////
   return (
     <div className="app">
-        <div className="list-books">
-          <Header/>
-          <StackShelves books={books}
-          ChangeBookShelf={ChangeBookShelf}/>
-        </div>
-          <Search/>
+         
+      <Router>
+        <Routes>
+          <Route path="*" element={<PageNotFound />} />
+          <Route path="/search"element={<Search Shelfbooks={books}ChangeBookShelf={ChangeBookShelf}/>} />
+          <Route exact path="/"element={<Home books={books}ChangeBookShelf={ChangeBookShelf}/> } />
+        </Routes>
+      </Router>
+
+
+
+
     </div>
   );
 }
